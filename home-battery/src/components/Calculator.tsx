@@ -8,7 +8,7 @@ import { cycleCost, planCycle, storedCost, toBattery, type Role } from '@/lib/ba
 import { ct, eur, fmtDay, fmtTime } from '@/lib/prices'
 import { useSettings } from '@/lib/settings'
 import { num } from '@/lib/storage'
-import { usePrices } from '@/lib/usePrices'
+import { currentPrice, usePrices } from '@/lib/usePrices'
 
 const ROLE_COLOR: Record<Role, string> = {
   before: 'var(--series-muted)',
@@ -53,7 +53,9 @@ export function Calculator({ onOpenSettings }: { onOpenSettings: () => void }) {
 
   const wear = cycleCost(battery)
   const manual = num(buyPrice)
-  const manualPrice = manual > 0 ? manual : plan?.chargePrice
+  const marketNow = currentPrice(prices)
+  const priceNow = marketNow === undefined ? undefined : marketNow + markup
+  const manualPrice = manual > 0 ? manual : priceNow
   const midnight = plan?.hours.find((h, k) => k > 0 && h.start.getHours() === 0)
   const chartData = plan?.hours.map((h) => ({
     key: h.start.getTime(),
@@ -220,8 +222,8 @@ export function Calculator({ onOpenSettings }: { onOpenSettings: () => void }) {
             value={buyPrice}
             onChange={setBuyPrice}
             suffix="€/kWh"
-            placeholder={plan ? plan.chargePrice.toFixed(3) : '0.30'}
-            hint={manual > 0 ? undefined : 'Empty: uses the dip price.'}
+            placeholder={priceNow?.toFixed(3) ?? '0.30'}
+            hint={manual > 0 || priceNow === undefined ? undefined : `Empty: uses the current price (${ct(priceNow)}).`}
           />
           {manualPrice !== undefined && (
             <div className="grid grid-cols-3 gap-2">

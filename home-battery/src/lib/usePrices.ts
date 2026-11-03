@@ -12,3 +12,9 @@ export function usePrices() {
   }, [])
   return { prices, error }
 }
+
+/** Price of the hour we're in now. */
+export function currentPrice(prices: PriceSlot[] | null) {
+  const now = Date.now()
+  return prices?.find((p) => p.start.getTime() <= now && now < p.start.getTime() + 3600_000)?.price
+}
