@@ -23,10 +23,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            home-battery/package-lock.json
       - run: npm ci
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+      - run: npm ci
+        working-directory: home-battery
+      - run: npm run build
+        working-directory: home-battery
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/home-battery/
+      - run: cp -r home-battery/dist dist/home-battery
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

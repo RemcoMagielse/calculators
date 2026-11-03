@@ -13,6 +13,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
+      // the home battery app lives in a subfolder with its own service worker
+      workbox: { navigateFallbackDenylist: [/\/home-battery\//] },
       manifest: {
         name: 'EV Tools',
         short_name: 'EV Tools',
