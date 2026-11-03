@@ -8,6 +8,8 @@ A small installable web app (PWA) with three tools for an electric car:
 
 Settings (home address, cars, default prices) are stored on the device.
 
+The [`home-battery/`](home-battery/) folder holds a separate app: a calculator that checks whether charging a home battery in the price dip pays off after round-trip losses and battery wear. It is published at `/<repo>/home-battery/`.
+
 ## Data sources (free, no API keys)
 
 - Address suggestions: [PDOK Locatieserver](https://api.pdok.nl/bzk/locatieserver/search/v3_1/ui/) (NL)
