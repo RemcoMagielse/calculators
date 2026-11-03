@@ -1,6 +1,13 @@
-# Car Calculators
+# Calculators
 
-A small installable web app (PWA) with three tools for an electric car:
+Small installable web apps (PWAs) for everyday energy and cost questions, published on GitHub Pages:
+
+- **EV Tools** (repo root) – `remcomagielse.github.io/calculators/`
+- **Home Battery** ([`home-battery/`](home-battery/)) – `remcomagielse.github.io/calculators/home-battery/`
+
+## EV Tools
+
+Three tools for an electric car:
 
 - **Trip** – how many kWh to charge for a trip from home (round trip optional), and the cheapest hours to charge, based on hourly Dutch energy prices.
 - **Battery** – how long to charge from the current % to 80% and 100%, when to stop, and what it costs.
@@ -8,7 +15,9 @@ A small installable web app (PWA) with three tools for an electric car:
 
 Settings (home address, cars, default prices) are stored on the device.
 
-The [`home-battery/`](home-battery/) folder holds a separate app: a calculator that checks whether charging a home battery in the price dip pays off after round-trip losses and battery wear. It is published at `/<repo>/home-battery/`.
+## Home Battery
+
+Checks whether charging a home battery in the price dip pays off after round-trip losses and battery wear. See [`home-battery/README.md`](home-battery/README.md).
 
 ## Data sources (free, no API keys)
 
