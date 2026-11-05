@@ -60,7 +60,7 @@ export function BatteryTool() {
             <BatteryMedium className="size-5" /> Current charge
           </CardTitle>
           <CardDescription>
-            {settings.evName} · {settings.batteryKwh} kWh usable · {settings.chargerKw} kW charger
+            {settings.evName} · {settings.batteryKwh} kWh usable · {settings.chargerKw} kWh/h charging
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
@@ -107,7 +107,7 @@ export function BatteryTool() {
       <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         Includes ~10% charging loss. Above {TAPER_FROM}% the car charges slower, so the time to 100% is an estimate.
-        Change battery size and charger power in Settings.
+        Change battery size and charging rate in Settings.
       </p>
     </div>
   )
@@ -150,7 +150,7 @@ function TargetCard({ target, plan, prices }: { target: number; plan: Plan | nul
               <Stat
                 label="Charge for"
                 value={`${target === 100 ? '~' : ''}${fmtDuration(plan.hours)}`}
-                sub={`at ${settings.chargerKw} kW`}
+                sub={`at ${settings.chargerKw} kWh/h`}
               />
               <Stat
                 label="From the grid"

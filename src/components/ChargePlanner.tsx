@@ -191,13 +191,13 @@ export function ChargePlanner({ onOpenSettings }: { onOpenSettings: () => void }
             <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm">
               <SlidersHorizontal className="size-4 text-muted-foreground" />
               <span className="flex-1">
-                {settings.evName}: {efficiency} km/kWh · {chargerKw} kW · {bufferPct}% margin
+                {settings.evName}: {efficiency} km/kWh · {chargerKw} kWh/h · {bufferPct}% margin
               </span>
               <span className="text-xs text-muted-foreground group-open:hidden">Adjust</span>
             </summary>
             <div className="grid grid-cols-2 gap-3 border-t p-3">
               <Field id="eff" label="Efficiency" value={efficiency} onChange={setEfficiency} suffix="km/kWh" />
-              <Field id="kw" label="Charger power" value={chargerKw} onChange={setChargerKw} suffix="kW" />
+              <Field id="kw" label="Charging rate" value={chargerKw} onChange={setChargerKw} suffix="kWh/h" />
               <Field id="buffer" label="Safety margin" value={bufferPct} onChange={setBufferPct} suffix="%" />
               {isAdjusted && (
                 <Button variant="ghost" className="self-end" onClick={resetAdjustments}>

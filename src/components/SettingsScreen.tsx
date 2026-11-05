@@ -111,7 +111,14 @@ export function SettingsScreen() {
             <Field id="evName" label="Name" type="text" value={settings.evName} onChange={(v) => update({ evName: v })} />
           </div>
           <Field id="eff" label="Efficiency" value={settings.efficiency} onChange={(v) => update({ efficiency: v })} suffix="km/kWh" />
-          <Field id="kw" label="Charger power" value={settings.chargerKw} onChange={(v) => update({ chargerKw: v })} suffix="kW" />
+          <Field
+            id="kw"
+            label="Charging rate"
+            value={settings.chargerKw}
+            onChange={(v) => update({ chargerKw: v })}
+            suffix="kWh/h"
+            hint="What effectively flows from the grid, e.g. 10.3"
+          />
           <Field
             id="battery"
             label="Usable battery"

@@ -7,10 +7,11 @@ Small installable web apps (PWAs) for everyday energy and cost questions, publis
 
 ## EV Tools
 
-Three tools for an electric car:
+Four tools for an electric car:
 
 - **Trip** – how many kWh to charge for a trip from home (round trip optional), and the cheapest hours to charge, based on hourly Dutch energy prices.
 - **Battery** – how long to charge from the current % to 80% and 100%, when to stop, and what it costs.
+- **Charge cost** – what a charging session (e.g. 13:00–15:00) costs at the hourly prices, and the resulting cost per km.
 - **Petrol vs EV** – cost per km for both cars and the crossover price point.
 
 Settings (home address, cars, default prices) are stored on the device.
