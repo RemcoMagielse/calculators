@@ -3,11 +3,11 @@ import { Info, Loader2, PlugZap, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, Stat } from '@/components/Field'
-import { CHARGING_LOSS, eur, fmtTime, type PriceSlot } from '@/lib/prices'
+import { Segmented } from '@/components/Segmented'
+import { CHARGING_LOSS, eur, fmtTime, priceSession, type PricedSession, type PriceSlot } from '@/lib/prices'
 import { useSettings } from '@/lib/settings'
 import { num } from '@/lib/storage'
 import { usePrices } from '@/lib/usePrices'
-import { cn } from '@/lib/utils'
 
 type Day = 'today' | 'tomorrow'
 const HOUR = 3600_000
@@ -32,48 +32,18 @@ function atTime(day: Day, hhmm: string) {
   return d
 }
 
-interface Part {
-  slot: PriceSlot
-  from: Date
-  to: Date
-  kwh: number
-  cost: number
-}
-
-interface Session {
+interface Session extends PricedSession {
   hours: number
   gridKwh: number
   batteryKwh: number
   km: number
-  cost: number
-  parts: Part[]
-  missingHours: number // part of the window without a published price
 }
 
 function calculate(start: Date, end: Date, rate: number, efficiency: number, markup: number, prices: PriceSlot[]): Session {
   const hours = (end.getTime() - start.getTime()) / HOUR
   const gridKwh = rate * hours
   const batteryKwh = gridKwh * (1 - CHARGING_LOSS)
-  const parts: Part[] = []
-  let covered = 0
-  for (const slot of prices) {
-    const from = Math.max(slot.start.getTime(), start.getTime())
-    const to = Math.min(slot.start.getTime() + HOUR, end.getTime())
-    if (to <= from) continue
-    const h = (to - from) / HOUR
-    covered += h
-    const kwh = rate * h
-    parts.push({ slot, from: new Date(from), to: new Date(to), kwh, cost: kwh * (slot.price + markup) })
-  }
-  return {
-    hours,
-    gridKwh,
-    batteryKwh,
-    km: batteryKwh * efficiency,
-    cost: parts.reduce((s, p) => s + p.cost, 0),
-    parts,
-    missingHours: Math.max(0, hours - covered),
-  }
+  return { ...priceSession(start, end, rate, prices, markup), hours, gridKwh, batteryKwh, km: batteryKwh * efficiency }
 }
 
 export function ChargeCost() {
@@ -116,22 +86,15 @@ export function ChargeCost() {
           <CardDescription>When will the car be charging?</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Day">
-            {(['today', 'tomorrow'] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDay(d)}
-                aria-pressed={day === d}
-                className={cn(
-                  'h-9 rounded-md text-sm font-medium capitalize transition-colors',
-                  day === d ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="Day"
+            options={[
+              { value: 'today', label: 'Today' },
+              { value: 'tomorrow', label: 'Tomorrow' },
+            ]}
+            value={day}
+            onChange={setDay}
+          />
           <div className="grid grid-cols-2 gap-3">
             <Field id="start" label="From" type="time" value={startTime} onChange={setStartTime} />
             <Field id="end" label="Until" type="time" value={endTime} onChange={setEndTime} />

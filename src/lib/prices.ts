@@ -69,3 +69,35 @@ export const fmtDay = (d: Date) => {
 }
 export const eur = (v: number, digits = 2) =>
   v.toLocaleString('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: digits, maximumFractionDigits: digits })
+
+export interface PricedPart {
+  slot: PriceSlot
+  from: Date
+  to: Date
+  kwh: number
+  cost: number
+}
+
+export interface PricedSession {
+  cost: number
+  parts: PricedPart[]
+  missingHours: number // part of the window without a published price
+}
+
+/** Cost of drawing `kwhPerHour` from the grid between `start` and `end` at hourly prices (+ markup). */
+export function priceSession(start: Date, end: Date, kwhPerHour: number, prices: PriceSlot[], markup = 0): PricedSession {
+  const HOUR = 3600_000
+  const hours = (end.getTime() - start.getTime()) / HOUR
+  const parts: PricedPart[] = []
+  let covered = 0
+  for (const slot of prices) {
+    const from = Math.max(slot.start.getTime(), start.getTime())
+    const to = Math.min(slot.start.getTime() + HOUR, end.getTime())
+    if (to <= from) continue
+    const h = (to - from) / HOUR
+    covered += h
+    const kwh = kwhPerHour * h
+    parts.push({ slot, from: new Date(from), to: new Date(to), kwh, cost: kwh * (slot.price + markup) })
+  }
+  return { cost: parts.reduce((s, p) => s + p.cost, 0), parts, missingHours: Math.max(0, hours - covered) }
+}
