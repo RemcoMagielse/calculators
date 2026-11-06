@@ -1,6 +1,7 @@
-import { ArrowLeft, BatteryCharging, BatteryMedium, Scale, Settings as SettingsIcon } from 'lucide-react'
+import { ArrowLeft, BatteryCharging, BatteryMedium, PlugZap, Scale, Settings as SettingsIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BatteryTool } from '@/components/BatteryTool'
+import { ChargeCost } from '@/components/ChargeCost'
 import { ChargePlanner } from '@/components/ChargePlanner'
 import { CostCompare } from '@/components/CostCompare'
 import { SettingsScreen } from '@/components/SettingsScreen'
@@ -9,11 +10,12 @@ import { SettingsProvider, useSettings } from '@/lib/settings'
 import { useStoredState } from '@/lib/storage'
 import { useState } from 'react'
 
-type Tool = 'charge' | 'battery' | 'compare'
+type Tool = 'charge' | 'battery' | 'cost' | 'compare'
 
 const TOOLS = [
   { id: 'charge', label: 'Trip', icon: BatteryCharging },
   { id: 'battery', label: 'Battery', icon: BatteryMedium },
+  { id: 'cost', label: 'Charge cost', icon: PlugZap },
   { id: 'compare', label: 'Petrol vs EV', icon: Scale },
 ] as const
 
@@ -50,6 +52,8 @@ function Shell() {
           <ChargePlanner onOpenSettings={() => setShowSettings(true)} />
         ) : tool === 'battery' ? (
           <BatteryTool />
+        ) : tool === 'cost' ? (
+          <ChargeCost />
         ) : (
           <CostCompare />
         )}
@@ -57,7 +61,7 @@ function Shell() {
 
       {!showSettings && (
         <nav className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-          <div className="mx-auto grid max-w-lg grid-cols-3">
+          <div className="mx-auto grid max-w-lg grid-cols-4">
             {TOOLS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

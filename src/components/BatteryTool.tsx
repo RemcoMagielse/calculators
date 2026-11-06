@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Stat } from '@/components/Field'
-import { CHARGING_LOSS, cheapestWindow, eur, fmtDay, fmtTime, type PriceSlot } from '@/lib/prices'
+import { Segmented } from '@/components/Segmented'
+import { CHARGING_LOSS, cheapestWindow, eur, fmtDay, fmtTime, priceSession, type PriceSlot } from '@/lib/prices'
 import { useSettings } from '@/lib/settings'
 import { num, useStoredState } from '@/lib/storage'
-import { currentPrice, usePrices } from '@/lib/usePrices'
+import { usePrices } from '@/lib/usePrices'
 
 // above this level the car slows down charging, even on a home charger
 const TAPER_FROM = 90
@@ -47,10 +48,8 @@ export function BatteryTool() {
   const pct = Math.min(100, Math.max(0, num(current) || 0))
   const capacity = num(settings.batteryKwh)
   const kw = num(settings.chargerKw)
-  const plans = useMemo(
-    () => [80, 100].map((t) => ({ target: t, plan: planCharge(pct, t, capacity, kw) })),
-    [pct, capacity, kw],
-  )
+  const [target, setTarget] = useStoredState<'80' | '100'>('batteryTarget', '80')
+  const plan = useMemo(() => planCharge(pct, Number(target), capacity, kw), [pct, target, capacity, kw])
 
   return (
     <div className="grid gap-4">
@@ -60,7 +59,7 @@ export function BatteryTool() {
             <BatteryMedium className="size-5" /> Current charge
           </CardTitle>
           <CardDescription>
-            {settings.evName} · {settings.batteryKwh} kWh usable · {settings.chargerKw} kW charger
+            {settings.evName} · {settings.batteryKwh} kWh usable · {settings.chargerKw} kWh/h charging
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
@@ -99,15 +98,22 @@ export function BatteryTool() {
         </CardContent>
       </Card>
 
-      {plans.map(({ target, plan }) => (
-        <TargetCard key={target} target={target} plan={plan} prices={prices} />
-      ))}
+      <Segmented
+        label="Charge to"
+        options={[
+          { value: '80', label: 'To 80%' },
+          { value: '100', label: 'To 100%' },
+        ]}
+        value={target}
+        onChange={setTarget}
+      />
+      <TargetCard target={Number(target)} plan={plan} prices={prices} />
 
       {priceError && <p className="text-sm text-destructive">{priceError}</p>}
       <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         Includes ~10% charging loss. Above {TAPER_FROM}% the car charges slower, so the time to 100% is an estimate.
-        Change battery size and charger power in Settings.
+        Change battery size and charging rate in Settings.
       </p>
     </div>
   )
@@ -116,14 +122,26 @@ export function BatteryTool() {
 function TargetCard({ target, plan, prices }: { target: number; plan: Plan | null; prices: PriceSlot[] | null }) {
   const { settings } = useSettings()
   const markup = num(settings.markup) || 0
+  const efficiency = num(settings.efficiency) || 0
+  const fallbackPrice = num(settings.kwhPrice) || 0
   const Icon = target === 100 ? BatteryFull : BatteryMedium
 
   const now = new Date()
   const stopAt = plan ? new Date(now.getTime() + plan.hours * 3600_000) : null
-  const nowPrice = currentPrice(prices)
-  const perKwhNow = nowPrice !== undefined ? nowPrice + markup : num(settings.kwhPrice) || 0
+  const km = plan ? plan.batteryKwh * efficiency : 0
+  const perKm = (cost: number) => (km > 0 ? cost / km : 0)
+
+  // start now: real hourly prices over the session; hours without a price use the default price from Settings
+  const nowSession = plan && stopAt && prices ? priceSession(now, stopAt, plan.gridKwh / plan.hours, prices, markup) : null
+  const nowCost = nowSession && plan ? nowSession.cost + (plan.gridKwh / plan.hours) * nowSession.missingHours * fallbackPrice : null
+  const estimated = !!nowSession && nowSession.missingHours > 1 / 60
+
   const cheapest = plan && prices ? cheapestWindow(prices, plan.hours) : null
   const cheapestStop = cheapest && plan ? new Date(cheapest.start.getTime() + plan.hours * 3600_000) : null
+  const cheapestSession =
+    cheapest && cheapestStop && plan && prices ? priceSession(cheapest.start, cheapestStop, plan.gridKwh / plan.hours, prices, markup) : null
+  const cheapestCost = cheapestSession && plan ? cheapestSession.cost + (plan.gridKwh / plan.hours) * cheapestSession.missingHours * fallbackPrice : null
+  const saving = nowCost !== null && cheapestCost !== null ? nowCost - cheapestCost : 0
 
   return (
     <Card>
@@ -146,38 +164,43 @@ function TargetCard({ target, plan, prices }: { target: number; plan: Plan | nul
           <p className="text-sm text-muted-foreground">Already at {target}% or more.</p>
         ) : (
           <>
+            <div className="rounded-lg bg-muted p-4 text-center">
+              <div className="text-xs text-muted-foreground">Cost per km if you start now</div>
+              {nowCost === null ? (
+                <Loader2 className="mx-auto my-2 size-5 animate-spin text-muted-foreground" />
+              ) : (
+                <>
+                  <div className="text-3xl font-semibold tabular-nums">{eur(perKm(nowCost), 3)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {eur(nowCost)} in total{estimated ? ' (partly estimated)' : ''}
+                  </div>
+                </>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Stat
                 label="Charge for"
                 value={`${target === 100 ? '~' : ''}${fmtDuration(plan.hours)}`}
-                sub={`at ${settings.chargerKw} kW`}
+                sub={`${plan.gridKwh.toFixed(1)} kWh from the grid`}
               />
-              <Stat
-                label="From the grid"
-                value={`${plan.gridKwh.toFixed(1)} kWh`}
-                sub={`${plan.batteryKwh.toFixed(1)} kWh into battery`}
-              />
+              <Stat label="Range added" value={`${Math.round(km)} km`} sub={`${plan.batteryKwh.toFixed(1)} kWh into battery`} />
             </div>
-            <div className="text-sm text-muted-foreground">
-              Cost if you start now: <span className="font-medium text-foreground">{eur(perKwhNow * plan.gridKwh)}</span>
-            </div>
-            {!prices ? (
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            ) : (
-              cheapest &&
-              cheapestStop && (
-                <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm">
-                  <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">
-                      Cheapest: {fmtDay(cheapest.start)} {fmtTime(cheapest.start)} – {fmtTime(cheapestStop)}
-                    </div>
-                    <div className="text-muted-foreground">
-                      approx. {eur((cheapest.avgPrice + markup) * plan.gridKwh)}
-                    </div>
+            {cheapest && cheapestStop && cheapestCost !== null && saving < 0.01 ? (
+              <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-muted-foreground">
+                <Clock className="size-4 shrink-0" /> Starting now is already the cheapest option.
+              </div>
+            ) : cheapest && cheapestStop && cheapestCost !== null && (
+              <div className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+                <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                <div className="flex-1">
+                  <div className="font-medium">
+                    Cheapest: {fmtDay(cheapest.start)} {fmtTime(cheapest.start)} – {fmtTime(cheapestStop)}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {eur(perKm(cheapestCost), 3)}/km · {eur(cheapestCost)} in total · saves {eur(saving)}
                   </div>
                 </div>
-              )
+              </div>
             )}
           </>
         )}
