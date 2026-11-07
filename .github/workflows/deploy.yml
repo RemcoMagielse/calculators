@@ -26,6 +26,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             home-battery/package-lock.json
+            energy-export/package-lock.json
       - run: npm ci
       - run: npm run build
         env:
@@ -36,7 +37,14 @@ jobs:
         working-directory: home-battery
         env:
           BASE_PATH: /${{ github.event.repository.name }}/home-battery/
+      - run: npm ci
+        working-directory: energy-export
+      - run: npm run build
+        working-directory: energy-export
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/energy-export/
       - run: cp -r home-battery/dist dist/home-battery
+      - run: cp -r energy-export/dist dist/energy-export
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
