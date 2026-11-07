@@ -157,6 +157,7 @@ export function Calculator({ onOpenSettings }: { onOpenSettings: () => void }) {
                       fontSize: 12,
                       color: 'var(--popover-foreground)',
                     }}
+                    itemStyle={{ color: 'var(--popover-foreground)' }}
                     labelFormatter={(_, p) => p?.[0]?.payload.label ?? ''}
                     formatter={(v, _, item) => {
                       const d = item.payload as (typeof chartData)[number]

@@ -4,6 +4,7 @@ Small installable web apps (PWAs) for everyday energy and cost questions, publis
 
 - **EV Tools** (repo root) – `remcomagielse.github.io/calculators/`
 - **Home Battery** ([`home-battery/`](home-battery/)) – `remcomagielse.github.io/calculators/home-battery/`
+- **Energy export** ([`energy-export/`](energy-export/)) – `remcomagielse.github.io/calculators/energy-export/`
 
 ## EV Tools
 
@@ -19,6 +20,10 @@ Settings (home address, cars, default prices) are stored on the device.
 ## Home Battery
 
 Checks whether charging a home battery in the price dip pays off after round-trip losses and battery wear. See [`home-battery/README.md`](home-battery/README.md).
+
+## Energy export
+
+Fetches daily electricity, solar and gas numbers from a HomeWizard account and copies them as rows for a spreadsheet. See [`energy-export/README.md`](energy-export/README.md).
 
 ## Data sources (free, no API keys)
 

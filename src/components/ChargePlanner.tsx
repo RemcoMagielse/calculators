@@ -306,6 +306,7 @@ export function ChargePlanner({ onOpenSettings }: { onOpenSettings: () => void }
                       fontSize: 12,
                       color: 'var(--popover-foreground)',
                     }}
+                    itemStyle={{ color: 'var(--popover-foreground)' }}
                     labelFormatter={(_, p) => p?.[0]?.payload.label ?? ''}
                     formatter={(v) => [`${eur(Number(v), 3)}/kWh`, 'Price']}
                   />
