@@ -3,7 +3,7 @@
 // This Worker passes those two calls on and stores nothing. The daily history is fetched by the
 // browser directly from tsdb-reader.homewizard.com, which does allow browser calls.
 
-const ALLOWED_ORIGINS = [/^https:\/\/remcomagielse\.github\.io$/, /^http:\/\/localhost(:\d+)?$/]
+const ALLOWED_ORIGINS = [/^https:\/\/remcomagielse\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/]
 
 const ROUTES = {
   '/token': 'https://api.homewizardeasyonline.com/v1/auth/account/token',
